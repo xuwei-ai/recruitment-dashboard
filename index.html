@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>博士医美 · 2026年招聘数据看板</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #f5f3ef; color: #4a4a4a; }
+.header { background: #3d4f6e; color: #f0ede8; padding: 32px 48px; }
+.header h1 { font-size: 26px; font-weight:500; margin-bottom:6px; letter-spacing:2px; }
+.header p { opacity:0.75; font-size:13px; letter-spacing:1px; }
+.header .meta { margin-top:16px; display:flex; gap:20px; flex-wrap:wrap; font-size:12px; opacity:0.8; }
+.header .links { margin-top:16px; display:flex; gap:14px; flex-wrap:wrap; }
+.header .links a { color:#e8e4db; font-size:12px; text-decoration:none; padding:5px 14px; border:1px solid rgba(232,228,219,0.3); border-radius:4px; transition:all 0.3s; }
+.header .links a:hover { background:rgba(232,228,219,0.1); }
+.container { max-width: 1400px; margin:0 auto; padding:28px 32px; }
+
+.overview { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:14px; margin-bottom:28px; }
+.card { background:#fff; border-radius:8px; padding:22px 18px; box-shadow:0 1px 2px rgba(0,0,0,0.04); cursor:pointer; transition:all 0.3s; text-align:center; border:1px solid #e8e4db; }
+.card:hover { transform:translateY(-2px); box-shadow:0 4px 16px rgba(0,0,0,0.06); }
+.card .icon { font-size:22px; margin-bottom:8px; }
+.card .number { font-size:34px; font-weight:400; margin-bottom:4px; }
+.card .label { font-size:12px; color:#9a968b; letter-spacing:1px; }
+
+.charts { display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-bottom:28px; }
+@media(max-width:768px){.charts{grid-template-columns:1fr}}
+.chart-box { background:#fff; border-radius:8px; padding:24px; box-shadow:0 1px 2px rgba(0,0,0,0.04); border:1px solid #e8e4db; }
+.chart-box h3 { font-size:15px; margin-bottom:22px; color:#5a5670; font-weight:500; letter-spacing:1px; }
+.chart-box canvas { max-height:320px; }
+
+.stage-row { display:flex; align-items:center; margin-bottom:14px; }
+.stage-label { width:72px; font-size:12px; color:#8a8678; text-align:right; padding-right:14px; }
+.bar-track { flex:1; height:26px; background:#f0ede8; border-radius:3px; overflow:hidden; }
+.bar-fill { height:100%; border-radius:3px; display:flex; align-items:center; justify-content:flex-end; padding-right:8px; transition:width 0.8s ease; }
+.bar-num { font-size:11px; color:#fff; font-weight:500; }
+.stage-num { width:48px; font-size:12px; color:#8a8678; padding-left:10px; }
+
+.today-section { display:grid; grid-template-columns:repeat(auto-fit, minmax(130px,1fr)); gap:12px; margin-bottom:18px; }
+.today-card { background:#fff; border-radius:8px; padding:20px 14px; text-align:center; border:1px solid #e8e4db; box-shadow:0 1px 2px rgba(0,0,0,0.04); }
+.today-card .today-number { font-size:32px; font-weight:400; margin-bottom:4px; }
+.today-card .today-label { font-size:12px; color:#9a968b; letter-spacing:1px; }
+
+.pos-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(130px,1fr)); gap:10px; }
+.pos-item { background:#f8f7f4; border-radius:6px; padding:14px 10px; text-align:center; cursor:pointer; transition:all 0.3s; border:1px solid #e8e4db; }
+.pos-item:hover { background:#efede8; border-color:#a09888; }
+.pos-item .pos-name { font-size:12px; color:#6b6880; margin-bottom:6px; }
+.pos-item .pos-count { font-size:24px; font-weight:400; color:#7a7688; }
+
+.filter-bar { display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+.filter-btn { padding:8px 18px; border:1px solid #d4cfc7; border-radius:4px; background:#fff; cursor:pointer; font-size:13px; transition:all 0.3s; color:#6b6880; }
+.filter-btn:hover { border-color:#a09888; color:#5a5670; background:#f8f7f4; }
+.filter-btn.active { background:#6b6880; color:#f0ede8; border-color:#6b6880; }
+
+.detail-panel { display:none; background:#fff; border-radius:8px; padding:24px; margin-bottom:24px; box-shadow:0 1px 2px rgba(0,0,0,0.04); border:1px solid #e8e4db; }
+.detail-panel.active { display:block; }
+.detail-panel h3 { margin-bottom:16px; color:#5a5670; font-size:15px; font-weight:500; }
+.count-badge { background:#efede8; color:#8a8678; padding:2px 10px; border-radius:10px; font-size:11px; margin-left:8px; }
+.table-wrapper { overflow-x:auto; max-height:520px; overflow-y:auto; border-radius:4px; border:1px solid #e8e4db; }
+table { width:100%; border-collapse:collapse; font-size:12px; }
+th { background:#f8f7f4; padding:10px 12px; text-align:left; border-bottom:1px solid #e8e4db; color:#7a7688; font-weight:500; position:sticky; top:0; z-index:1; white-space:nowrap; }
+td { padding:9px 12px; border-bottom:1px solid #f0ede8; vertical-align:top; }
+tr:hover td { background:#faf9f6; }
+
+.update-note { background:#f8f7f4; border-left:4px solid #6b6880; padding:16px 20px; margin-bottom:24px; border-radius:4px; font-size:13px; color:#6b6880; }
+.update-note code { background:#fff; padding:2px 6px; border-radius:3px; border:1px solid #e8e4db; font-family:monospace; }
+
+footer { text-align:center; padding:28px; color:#b5b0a4; font-size:11px; border-top:1px solid #e8e4db; margin-top:28px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1>博士医美 · 2026年招聘数据看板</h1>
+    <p>招聘全流程追踪 · 筛选简历 → 沟通 → 约面试 → 初试 → 复试 → 试岗 → 入职</p>
+    <div class="meta">
+        <span>数据更新时间：2026-07-17 13:46:22</span>
+        <span>候选人总数：33人</span>
+        <span>博士机构：25人</span>
+        <span>医柏龄：8人</span>
+    </div>
+    <div class="links">
+        <a href="https://docs.qq.com/sheet/DTE1pekdidUxzUUJa" target="_blank">📊 招聘台账（源数据）</a>
+        <a href="https://docs.qq.com/sheet/DUmdhSW9JR1lPSWFT" target="_blank">📋 集团招聘进展（源数据）</a>
+    </div>
+</div>
+
+<div class="container">
+
+<div class="update-note">
+    <strong>数据更新说明：</strong>本看板数据来自腾讯文档。当文档更新后，请编辑 <code>/workspace/招聘数据.json</code> 并运行 <code>python3.11 /root/.codebuddy/artifact/ed72e686-38b6-43b6-ab4a-09e7b6505d6d/generate_dashboard.py</code> 重新生成看板。
+</div>
+
+<div class="overview">
+    <div class="card" onclick="scrollToTable('全部候选人')" style="border-top:3px solid #6b6880;">
+        <div class="icon">&#128203;</div><div class="number" style="color:#6b6880;">33</div><div class="label">候选人总数</div>
+    </div>
+    <div class="card" onclick="filterOrgBtn('博士')" style="border-top:3px solid #7a7688;">
+        <div class="icon">&#127968;</div><div class="number" style="color:#7a7688;">25</div><div class="label">博士机构</div>
+    </div>
+    <div class="card" onclick="filterOrgBtn('医柏龄')" style="border-top:3px solid #9a968b;">
+        <div class="icon">&#127968;</div><div class="number" style="color:#9a968b;">8</div><div class="label">医柏龄</div>
+    </div><div class="card" onclick="scrollToTable('筛选/沟通阶段')" style="border-top:3px solid #b5c4b1;">
+        <div class="icon">&#128231;</div><div class="number" style="color:#b5c4b1;">3</div><div class="label">筛选/沟通</div></div><div class="card" onclick="scrollToTable('初试阶段')" style="border-top:3px solid #c4b7a6;">
+        <div class="icon">&#128100;</div><div class="number" style="color:#c4b7a6;">6</div><div class="label">初试</div></div><div class="card" onclick="scrollToTable('复试阶段')" style="border-top:3px solid #a3b5a6;">
+        <div class="icon">&#128101;</div><div class="number" style="color:#a3b5a6;">3</div><div class="label">复试</div></div><div class="card" onclick="scrollToTable('终面阶段')" style="border-top:3px solid #b8a9c9;">
+        <div class="icon">&#127891;</div><div class="number" style="color:#b8a9c9;">4</div><div class="label">终面</div></div><div class="card" onclick="scrollToTable('试岗阶段')" style="border-top:3px solid #c9b99a;">
+        <div class="icon">&#128269;</div><div class="number" style="color:#c9b99a;">8</div><div class="label">试岗</div></div><div class="card" onclick="scrollToTable('offer阶段')" style="border-top:3px solid #a8c4a2;">
+        <div class="icon">&#10004;</div><div class="number" style="color:#a8c4a2;">6</div><div class="label">offer</div></div><div class="card" onclick="scrollToTable('淘汰阶段')" style="border-top:3px solid #c5bdb0;">
+        <div class="icon">&#10060;</div><div class="number" style="color:#c5bdb0;">3</div><div class="label">淘汰</div></div>
+</div>
+
+<div class="charts">
+    <div class="chart-box"><h3>招聘漏斗</h3><div class="stage-row">
+            <span class="stage-label">筛选/沟通</span>
+            <div class="bar-track"><div class="bar-fill" style="width:37.5%;background:#b5c4b1"><span class="bar-num">3</span></div></div>
+            <span class="stage-num">3人</span></div><div class="stage-row">
+            <span class="stage-label">初试</span>
+            <div class="bar-track"><div class="bar-fill" style="width:75.0%;background:#c4b7a6"><span class="bar-num">6</span></div></div>
+            <span class="stage-num">6人</span></div><div class="stage-row">
+            <span class="stage-label">复试</span>
+            <div class="bar-track"><div class="bar-fill" style="width:37.5%;background:#a3b5a6"><span class="bar-num">3</span></div></div>
+            <span class="stage-num">3人</span></div><div class="stage-row">
+            <span class="stage-label">终面</span>
+            <div class="bar-track"><div class="bar-fill" style="width:50.0%;background:#b8a9c9"><span class="bar-num">4</span></div></div>
+            <span class="stage-num">4人</span></div><div class="stage-row">
+            <span class="stage-label">试岗</span>
+            <div class="bar-track"><div class="bar-fill" style="width:100.0%;background:#c9b99a"><span class="bar-num">8</span></div></div>
+            <span class="stage-num">8人</span></div><div class="stage-row">
+            <span class="stage-label">offer</span>
+            <div class="bar-track"><div class="bar-fill" style="width:75.0%;background:#a8c4a2"><span class="bar-num">6</span></div></div>
+            <span class="stage-num">6人</span></div><div class="stage-row">
+            <span class="stage-label">入职</span>
+            <div class="bar-track"><div class="bar-fill" style="width:0.0%;background:#b7b7a4"><span class="bar-num">0</span></div></div>
+            <span class="stage-num">0人</span></div><div class="stage-row">
+            <span class="stage-label">淘汰</span>
+            <div class="bar-track"><div class="bar-fill" style="width:37.5%;background:#c5bdb0"><span class="bar-num">3</span></div></div>
+            <span class="stage-num">3人</span></div></div>
+    <div class="chart-box">
+        <h3>今日面试数据情况（2026/07/17）</h3>
+        <div class="today-section"><div class="today-card">
+            <div class="today-number" style="color:#6b6880;">0</div>
+            <div class="today-label">今日新增</div>
+        </div><div class="today-card">
+            <div class="today-number" style="color:#c4b7a6;">0</div>
+            <div class="today-label">今日面试</div>
+        </div><div class="today-card">
+            <div class="today-number" style="color:#c9b99a;">0</div>
+            <div class="today-label">今日试岗</div>
+        </div><div class="today-card">
+            <div class="today-number" style="color:#b7b7a4;">0</div>
+            <div class="today-label">今日入职</div>
+        </div></div>
+        <div class="table-wrapper"><table>
+        <thead><tr><th>姓名</th><th>岗位</th><th>阶段</th><th>跟进人</th><th>进展</th></tr></thead>
+        <tbody><tr><td colspan="5" style="text-align:center;color:#9a968b;padding:20px;">今日暂无数据</td></tr></tbody></table></div>
+    </div>
+</div>
+
+<div class="chart-box" style="margin-bottom:24px;">
+    <h3>各岗位招聘情况（点击卡片筛选）</h3>
+    <div class="pos-grid"><div class="pos-item" onclick="filterByPos('线上客服')"><div class="pos-name">线上客服</div><div class="pos-count">11</div></div><div class="pos-item" onclick="filterByPos('大健康护士')"><div class="pos-name">大健康护士</div><div class="pos-count">6</div></div><div class="pos-item" onclick="filterByPos('供应室护士')"><div class="pos-name">供应室护士</div><div class="pos-count">5</div></div><div class="pos-item" onclick="filterByPos('注射医生管家')"><div class="pos-name">注射医生管家</div><div class="pos-count">2</div></div><div class="pos-item" onclick="filterByPos('药剂师')"><div class="pos-name">药剂师</div><div class="pos-count">2</div></div><div class="pos-item" onclick="filterByPos('大健康咨询')"><div class="pos-name">大健康咨询</div><div class="pos-count">2</div></div><div class="pos-item" onclick="filterByPos('皮肤科医生')"><div class="pos-name">皮肤科医生</div><div class="pos-count">2</div></div><div class="pos-item" onclick="filterByPos('信息流运营')"><div class="pos-name">信息流运营</div><div class="pos-count">1</div></div><div class="pos-item" onclick="filterByPos('管家')"><div class="pos-name">管家</div><div class="pos-count">1</div></div><div class="pos-item" onclick="filterByPos('自媒体专员')"><div class="pos-name">自媒体专员</div><div class="pos-count">1</div></div></div>
+</div>
+
+<div class="filter-bar">
+    <button class="filter-btn" onclick="filterOrg('all')">全部机构</button>
+    <button class="filter-btn active" onclick="filterOrg('博士')">只看博士</button>
+    <button class="filter-btn" onclick="filterOrg('医柏龄')">只看医柏龄</button>
+    <button class="filter-btn" onclick="showAll()">显示全部明细</button>
+</div>
+
+<div class="detail-panel active" id="detail-recruitment">
+    <div class="detail-section" id="detail-全部候选人">
+            <h3>全部候选人 <span class="count-badge">33条</span></h3>
+            <div class="table-wrapper"><table>
+                <thead><tr><th>序号</th><th>岗位</th><th>姓名</th><th>阶段</th><th>机构</th><th>更新日期</th><th>跟进人</th><th>初步评价</th><th>当前进展</th></tr></thead>
+                <tbody><tr><td>1</td><td>大健康护士</td><td>孙瑜谦</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#a8c4a230;color:#5a5a5a;border:1px solid #a8c4a2">offer</span></td><td>医柏龄</td><td>2026/6/29</td><td>张倩</td><td>18-19即墨人民医院护士，2022-2023在口腔干过，有护士资格证和执业证，形象气质佳，有服务意识</td><td>因薪资问题，候选人需考虑一下</td></tr><tr><td>2</td><td>线上客服</td><td>王泽坤</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#a8c4a230;color:#5a5a5a;border:1px solid #a8c4a2">offer</span></td><td>博士</td><td>2026/6/29</td><td>张倩</td><td>形象气质佳，一年保时捷主播，因工作过累考虑离职，家住崂山</td><td>可约试岗，候选人考虑一下</td></tr><tr><td>3</td><td>供应室护士</td><td>宋佳奕</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#a3b5a630;color:#5a5a5a;border:1px solid #a3b5a6">复试</span></td><td>博士</td><td>2026/6/29</td><td>张倩</td><td>有护士资格证，26应届毕业生，个人有意向往医美行业发展</td><td>年纪较小，淘汰</td></tr><tr><td>4</td><td>线上客服</td><td>林雪</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c9b99a30;color:#5a5a5a;border:1px solid #c9b99a">试岗</span></td><td>博士</td><td>2026/6/29</td><td>张倩</td><td>形象气质佳，御嘉妍干过半年前台和助理，对医美项目有一定了解</td><td>7/1试岗，不适应放弃试岗</td></tr><tr><td>5</td><td>供应室护士</td><td>林月蕊</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#b8a9c930;color:#5a5a5a;border:1px solid #b8a9c9">终面</span></td><td>博士</td><td>2026/6/29</td><td>张倩</td><td>有护士资格证和执业证</td><td>7/1 下午3点面试，待定</td></tr><tr><td>6</td><td>注射医生管家</td><td>朱艳霞</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c9b99a30;color:#5a5a5a;border:1px solid #c9b99a">试岗</span></td><td>博士</td><td>2026/6/29</td><td>张倩</td><td>有生美和轻医美经验</td><td>7/12试岗，已办入职</td></tr><tr><td>7</td><td>信息流运营</td><td>由娇娇</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#b8a9c930;color:#5a5a5a;border:1px solid #b8a9c9">终面</span></td><td>博士</td><td>2026/6/29</td><td>张倩</td><td>有医美竞价经验，最近两段为信息流优化师经验</td><td>陈玲玲、李贺面试通过，待沟通杨泽文</td></tr><tr><td>8</td><td>注射医生管家</td><td>付晨宇</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#b8a9c930;color:#5a5a5a;border:1px solid #b8a9c9">终面</span></td><td>博士</td><td>2026/6/30</td><td>张倩</td><td>两年护士，两年医助及客服经验，医疗背景，沟通表达能力好，形象气质佳</td><td>刘静面试通过，待鲁院面试，因薪资与预期不符，候选人放弃</td></tr><tr><td>9</td><td>供应室护士</td><td>刘丽萍</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c5bdb030;color:#5a5a5a;border:1px solid #c5bdb0">淘汰</span></td><td>博士</td><td>2026/6/30</td><td>张倩</td><td>5年公立医院护士经验</td><td>年纪较小，淘汰</td></tr><tr><td>10</td><td>供应室护士</td><td>张玉娟</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c5bdb030;color:#5a5a5a;border:1px solid #c5bdb0">淘汰</span></td><td>博士</td><td>2026/7/1</td><td>张倩</td><td>有护士资格证和执业证</td><td>年纪较小，考虑结婚生子问题，不合适，淘汰</td></tr><tr><td>11</td><td>线上客服</td><td>李娅珍</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c9b99a30;color:#5a5a5a;border:1px solid #c9b99a">试岗</span></td><td>博士</td><td>2026/7/2</td><td>张倩</td><td>有电销经验</td><td>7.4试岗淘汰</td></tr><tr><td>12</td><td>线上客服</td><td>杨晨</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c5bdb030;color:#5a5a5a;border:1px solid #c5bdb0">淘汰</span></td><td>博士</td><td>2026/7/2</td><td>张倩</td><td>没有医美和电销经验，不合适</td><td>没有医美和电销经验，不合适，淘汰</td></tr><tr><td>13</td><td>药剂师</td><td>于晓芸</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c9b99a30;color:#5a5a5a;border:1px solid #c9b99a">试岗</span></td><td>博士</td><td>2026/6/29</td><td>郭倩</td><td>有二家医美机构药房工作经验，药剂师证件</td><td>7.1试岗三天，7.3三天试岗与本人及主管沟通，可以办理入职手续</td></tr><tr><td>14</td><td>药剂师</td><td>张迪</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#b8a9c930;color:#5a5a5a;border:1px solid #b8a9c9">终面</span></td><td>博士</td><td>2026/7/1</td><td>郭倩</td><td>有药剂师证件，原先在二家综合医院做药剂师工作</td><td>可试岗，看于晓芸试岗情况来定是否试岗</td></tr><tr><td>15</td><td>供应室护士</td><td>乔亚飞</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c9b99a30;color:#5a5a5a;border:1px solid #c9b99a">试岗</span></td><td>博士</td><td>2026/7/1</td><td>郭倩</td><td>有护士证，本人陕西西安人，毕业一直在一家二级综合医院做病房护士工作，在当地就业面太窄，来青岛发展</td><td>7/6试岗</td></tr><tr><td>16</td><td>线上客服</td><td>李林</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#a3b5a630;color:#5a5a5a;border:1px solid #a3b5a6">复试</span></td><td>博士</td><td>2026/7/1</td><td>郭倩</td><td>本人护理专业，毕业后先后在北京伊美尔做咨询助理1.5年，南京华韩做咨询师1.5年，本人自述感觉个人综合能力目前只能在小机构做咨询，所以选择深耕下再日后往现场发展，张宁复试有一定专业，需几天后回青岛线下复试下</td><td>7.1线上进行面试，线下复试时间待定</td></tr><tr><td>17</td><td>管家</td><td>伊伊</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c4b7a630;color:#5a5a5a;border:1px solid #c4b7a6">初试</span></td><td>博士</td><td>2026/7/2</td><td>郭倩</td><td>本人有护士证，在大连董萍医美做过4年咨询，在青岛美莱科技做过皮肤管理及客户管理管家3.5年，刚离职，本人日后想往技术或销售岗发展，对管家偏服务感觉不是很适合，目前在李沧区住，通勤1个多小时，感觉有点远，需考虑</td><td>回去考虑下综合距离等因素，待定</td></tr><tr><td>18</td><td>线上客服</td><td>刘昱琪</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c4b7a630;color:#5a5a5a;border:1px solid #c4b7a6">初试</span></td><td>博士</td><td>2026/7/3</td><td>张倩</td><td>有美容师和中医养生销售经验</td><td>主要以出差为主，没有电销和医美经验，不合适</td></tr><tr><td>19</td><td>线上客服</td><td>张含笑</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c4b7a630;color:#5a5a5a;border:1px solid #c4b7a6">初试</span></td><td>博士</td><td>2026/7/5</td><td>张倩</td><td>一年半医院电话销售经验</td><td>沟通表达能力较好，候选人回去考虑一下工作量</td></tr><tr><td>20</td><td>大健康护士</td><td>朱小洁</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c9b99a30;color:#5a5a5a;border:1px solid #c9b99a">试岗</span></td><td>医柏龄</td><td>2026/7/7</td><td>张倩</td><td>近20年护士经验</td><td>经验丰富，可作为护理组长培养</td></tr><tr><td>21</td><td>大健康护士</td><td>陈伊静</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c9b99a30;color:#5a5a5a;border:1px solid #c9b99a">试岗</span></td><td>医柏龄</td><td>2026/7/10</td><td>张倩</td><td>9年护理经验，大健康行业3年护士经验</td><td>有大健康护士经验，7/18试岗</td></tr><tr><td>22</td><td>大健康咨询</td><td>杨琦</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#a3b5a630;color:#5a5a5a;border:1px solid #a3b5a6">复试</span></td><td>医柏龄</td><td>2026/7/8</td><td>张倩</td><td>40岁，女，已离职，现居市北，生物科学专业，前期做过广告及食品行业销售，今年4月开始接触大健康，任职运营总监，负责院内管理，主要为运营体系搭建、接诊流程、产品体系搭建等，沟通表达能力好，意向度较高，因现在的企业老板负债过多，无法发薪，选择离职。</td><td>形象气质一般，复试淘汰</td></tr><tr><td>23</td><td>大健康护士</td><td>张淑宁</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#a8c4a230;color:#5a5a5a;border:1px solid #a8c4a2">offer</span></td><td>医柏龄</td><td>2026/7/9</td><td>郭倩</td><td>形象气质佳，2026年毕业，有护士证，在即墨一家高端体检中心做护士工作，自述静脉穿刺技术还可以，还未离职，在新单位在试用期，因拖欠工资选择离职</td><td>护士长复试，可以过来试岗几天看看技术，潘总来定一下</td></tr><tr><td>24</td><td>大健康护士</td><td>王柳</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#a8c4a230;color:#5a5a5a;border:1px solid #a8c4a2">offer</span></td><td>医柏龄</td><td>2026/7/10</td><td>郭倩</td><td>形象气质佳，2027年毕业，有护士证，在即墨一家高端体检中心做护士工作，自述静脉穿刺技术还可以，还未离职，在新单位在试用期，因拖欠工资选择离职</td><td>护士长复试，可以过来试岗几天看看技术，潘总来定一下</td></tr><tr><td>25</td><td>大健康护士</td><td>朱晓琪</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#a8c4a230;color:#5a5a5a;border:1px solid #a8c4a2">offer</span></td><td>医柏龄</td><td>2026/7/13</td><td>郭倩</td><td>形象气质好，本人原先做影像护士，做血管造影的静脉穿刺，之前做临床老年人居多，穿刺技术没有问题，目前还未离职，可以过来试岗，大约半个月离职</td><td>护士长及潘总进行了复试，可以过来试岗</td></tr><tr><td>26</td><td>线上客服</td><td>葛圆圆</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c9b99a30;color:#5a5a5a;border:1px solid #c9b99a">试岗</span></td><td>博士</td><td>2026/7/10</td><td>张倩</td><td>多年销售经验，短暂接触过医美客服岗位</td><td>7/17试岗</td></tr><tr><td>27</td><td>皮肤科医生</td><td>谢龙</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c4b7a630;color:#5a5a5a;border:1px solid #c4b7a6">初试</span></td><td>博士</td><td>2026/7/15</td><td>徐玮</td><td></td><td>约初试7.19下午2点</td></tr><tr><td>28</td><td>皮肤科医生</td><td>刘筱</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#b5c4b130;color:#5a5a5a;border:1px solid #b5c4b1">筛选/沟通</span></td><td>博士</td><td>2026/7/15</td><td>徐玮</td><td></td><td>约初试</td></tr><tr><td>29</td><td>线上客服</td><td>徐晓萌</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#b5c4b130;color:#5a5a5a;border:1px solid #b5c4b1">筛选/沟通</span></td><td>博士</td><td>2026/7/13</td><td>张倩</td><td>1年伊美尔客服经验</td><td>7/20上午10点</td></tr><tr><td>30</td><td>线上客服</td><td>张钰</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#a8c4a230;color:#5a5a5a;border:1px solid #a8c4a2">offer</span></td><td>博士</td><td>2026/7/15</td><td>张倩</td><td>有眼科咨询及美容导师经验</td><td>终面通过，可约试岗，目前在职，最快8月底到岗</td></tr><tr><td>31</td><td>自媒体专员</td><td>张文</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#b5c4b130;color:#5a5a5a;border:1px solid #b5c4b1">筛选/沟通</span></td><td>博士</td><td>2026/7/15</td><td>张倩</td><td></td><td>7/20下午3点</td></tr><tr><td>32</td><td>大健康咨询</td><td>张新</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c4b7a630;color:#5a5a5a;border:1px solid #c4b7a6">初试</span></td><td>医柏龄</td><td>2026/7/19</td><td>张倩</td><td>36岁，女，现居黄岛，10余年私募基金销售经验，20年开始接触大健康行业，主要负责市场拓展及客户对接工作，客户以金融、保险行业客户为主，自身有一定资源。25年底开始自己创业，但因资金及市场问题，目前在收尾阶段，想要寻求稳定发展的平台。</td><td>7/20下午4点</td></tr><tr><td>33</td><td>线上客服</td><td>杨泓</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c4b7a630;color:#5a5a5a;border:1px solid #c4b7a6">初试</span></td><td>博士</td><td>2026/7/17</td><td>郭倩</td><td></td><td>7.17下午2点过来面试</td></tr></tbody></table></div></div>
+    <div style="margin-top:20px;"><div class="detail-section" id="detail-筛选/沟通阶段">
+            <h3>筛选/沟通阶段 <span class="count-badge">3条</span></h3>
+            <div class="table-wrapper"><table>
+                <thead><tr><th>序号</th><th>岗位</th><th>姓名</th><th>机构</th><th>更新日期</th><th>跟进人</th><th>当前进展</th></tr></thead>
+                <tbody><tr><td>28</td><td>皮肤科医生</td><td>刘筱</td><td>博士</td><td>2026/7/15</td><td>徐玮</td><td>约初试</td></tr><tr><td>29</td><td>线上客服</td><td>徐晓萌</td><td>博士</td><td>2026/7/13</td><td>张倩</td><td>7/20上午10点</td></tr><tr><td>31</td><td>自媒体专员</td><td>张文</td><td>博士</td><td>2026/7/15</td><td>张倩</td><td>7/20下午3点</td></tr></tbody></table></div></div><div class="detail-section" id="detail-初试阶段">
+            <h3>初试阶段 <span class="count-badge">6条</span></h3>
+            <div class="table-wrapper"><table>
+                <thead><tr><th>序号</th><th>岗位</th><th>姓名</th><th>机构</th><th>更新日期</th><th>跟进人</th><th>当前进展</th></tr></thead>
+                <tbody><tr><td>17</td><td>管家</td><td>伊伊</td><td>博士</td><td>2026/7/2</td><td>郭倩</td><td>回去考虑下综合距离等因素，待定</td></tr><tr><td>18</td><td>线上客服</td><td>刘昱琪</td><td>博士</td><td>2026/7/3</td><td>张倩</td><td>主要以出差为主，没有电销和医美经验，不合适</td></tr><tr><td>19</td><td>线上客服</td><td>张含笑</td><td>博士</td><td>2026/7/5</td><td>张倩</td><td>沟通表达能力较好，候选人回去考虑一下工作量</td></tr><tr><td>27</td><td>皮肤科医生</td><td>谢龙</td><td>博士</td><td>2026/7/15</td><td>徐玮</td><td>约初试7.19下午2点</td></tr><tr><td>32</td><td>大健康咨询</td><td>张新</td><td>医柏龄</td><td>2026/7/19</td><td>张倩</td><td>7/20下午4点</td></tr><tr><td>33</td><td>线上客服</td><td>杨泓</td><td>博士</td><td>2026/7/17</td><td>郭倩</td><td>7.17下午2点过来面试</td></tr></tbody></table></div></div><div class="detail-section" id="detail-复试阶段">
+            <h3>复试阶段 <span class="count-badge">3条</span></h3>
+            <div class="table-wrapper"><table>
+                <thead><tr><th>序号</th><th>岗位</th><th>姓名</th><th>机构</th><th>更新日期</th><th>跟进人</th><th>当前进展</th></tr></thead>
+                <tbody><tr><td>3</td><td>供应室护士</td><td>宋佳奕</td><td>博士</td><td>2026/6/29</td><td>张倩</td><td>年纪较小，淘汰</td></tr><tr><td>16</td><td>线上客服</td><td>李林</td><td>博士</td><td>2026/7/1</td><td>郭倩</td><td>7.1线上进行面试，线下复试时间待定</td></tr><tr><td>22</td><td>大健康咨询</td><td>杨琦</td><td>医柏龄</td><td>2026/7/8</td><td>张倩</td><td>形象气质一般，复试淘汰</td></tr></tbody></table></div></div><div class="detail-section" id="detail-终面阶段">
+            <h3>终面阶段 <span class="count-badge">4条</span></h3>
+            <div class="table-wrapper"><table>
+                <thead><tr><th>序号</th><th>岗位</th><th>姓名</th><th>机构</th><th>更新日期</th><th>跟进人</th><th>当前进展</th></tr></thead>
+                <tbody><tr><td>5</td><td>供应室护士</td><td>林月蕊</td><td>博士</td><td>2026/6/29</td><td>张倩</td><td>7/1 下午3点面试，待定</td></tr><tr><td>7</td><td>信息流运营</td><td>由娇娇</td><td>博士</td><td>2026/6/29</td><td>张倩</td><td>陈玲玲、李贺面试通过，待沟通杨泽文</td></tr><tr><td>8</td><td>注射医生管家</td><td>付晨宇</td><td>博士</td><td>2026/6/30</td><td>张倩</td><td>刘静面试通过，待鲁院面试，因薪资与预期不符，候选人放弃</td></tr><tr><td>14</td><td>药剂师</td><td>张迪</td><td>博士</td><td>2026/7/1</td><td>郭倩</td><td>可试岗，看于晓芸试岗情况来定是否试岗</td></tr></tbody></table></div></div><div class="detail-section" id="detail-试岗阶段">
+            <h3>试岗阶段 <span class="count-badge">8条</span></h3>
+            <div class="table-wrapper"><table>
+                <thead><tr><th>序号</th><th>岗位</th><th>姓名</th><th>机构</th><th>更新日期</th><th>跟进人</th><th>当前进展</th></tr></thead>
+                <tbody><tr><td>4</td><td>线上客服</td><td>林雪</td><td>博士</td><td>2026/6/29</td><td>张倩</td><td>7/1试岗，不适应放弃试岗</td></tr><tr><td>6</td><td>注射医生管家</td><td>朱艳霞</td><td>博士</td><td>2026/6/29</td><td>张倩</td><td>7/12试岗，已办入职</td></tr><tr><td>11</td><td>线上客服</td><td>李娅珍</td><td>博士</td><td>2026/7/2</td><td>张倩</td><td>7.4试岗淘汰</td></tr><tr><td>13</td><td>药剂师</td><td>于晓芸</td><td>博士</td><td>2026/6/29</td><td>郭倩</td><td>7.1试岗三天，7.3三天试岗与本人及主管沟通，可以办理入职手续</td></tr><tr><td>15</td><td>供应室护士</td><td>乔亚飞</td><td>博士</td><td>2026/7/1</td><td>郭倩</td><td>7/6试岗</td></tr><tr><td>20</td><td>大健康护士</td><td>朱小洁</td><td>医柏龄</td><td>2026/7/7</td><td>张倩</td><td>经验丰富，可作为护理组长培养</td></tr><tr><td>21</td><td>大健康护士</td><td>陈伊静</td><td>医柏龄</td><td>2026/7/10</td><td>张倩</td><td>有大健康护士经验，7/18试岗</td></tr><tr><td>26</td><td>线上客服</td><td>葛圆圆</td><td>博士</td><td>2026/7/10</td><td>张倩</td><td>7/17试岗</td></tr></tbody></table></div></div><div class="detail-section" id="detail-offer阶段">
+            <h3>offer阶段 <span class="count-badge">6条</span></h3>
+            <div class="table-wrapper"><table>
+                <thead><tr><th>序号</th><th>岗位</th><th>姓名</th><th>机构</th><th>更新日期</th><th>跟进人</th><th>当前进展</th></tr></thead>
+                <tbody><tr><td>1</td><td>大健康护士</td><td>孙瑜谦</td><td>医柏龄</td><td>2026/6/29</td><td>张倩</td><td>因薪资问题，候选人需考虑一下</td></tr><tr><td>2</td><td>线上客服</td><td>王泽坤</td><td>博士</td><td>2026/6/29</td><td>张倩</td><td>可约试岗，候选人考虑一下</td></tr><tr><td>23</td><td>大健康护士</td><td>张淑宁</td><td>医柏龄</td><td>2026/7/9</td><td>郭倩</td><td>护士长复试，可以过来试岗几天看看技术，潘总来定一下</td></tr><tr><td>24</td><td>大健康护士</td><td>王柳</td><td>医柏龄</td><td>2026/7/10</td><td>郭倩</td><td>护士长复试，可以过来试岗几天看看技术，潘总来定一下</td></tr><tr><td>25</td><td>大健康护士</td><td>朱晓琪</td><td>医柏龄</td><td>2026/7/13</td><td>郭倩</td><td>护士长及潘总进行了复试，可以过来试岗</td></tr><tr><td>30</td><td>线上客服</td><td>张钰</td><td>博士</td><td>2026/7/15</td><td>张倩</td><td>终面通过，可约试岗，目前在职，最快8月底到岗</td></tr></tbody></table></div></div><div class="detail-section" id="detail-淘汰阶段">
+            <h3>淘汰阶段 <span class="count-badge">3条</span></h3>
+            <div class="table-wrapper"><table>
+                <thead><tr><th>序号</th><th>岗位</th><th>姓名</th><th>机构</th><th>更新日期</th><th>跟进人</th><th>当前进展</th></tr></thead>
+                <tbody><tr><td>9</td><td>供应室护士</td><td>刘丽萍</td><td>博士</td><td>2026/6/30</td><td>张倩</td><td>年纪较小，淘汰</td></tr><tr><td>10</td><td>供应室护士</td><td>张玉娟</td><td>博士</td><td>2026/7/1</td><td>张倩</td><td>年纪较小，考虑结婚生子问题，不合适，淘汰</td></tr><tr><td>12</td><td>线上客服</td><td>杨晨</td><td>博士</td><td>2026/7/2</td><td>张倩</td><td>没有医美和电销经验，不合适，淘汰</td></tr></tbody></table></div></div></div>
+    <div style="margin-top:20px;"><div class="detail-section" id="detail-岗位：线上客服">
+            <h3>岗位：线上客服 <span class="count-badge">11条</span></h3>
+            <div class="table-wrapper"><table>
+                <thead><tr><th>序号</th><th>姓名</th><th>阶段</th><th>机构</th><th>更新日期</th><th>跟进人</th><th>当前进展</th></tr></thead>
+                <tbody><tr><td>2</td><td>王泽坤</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#a8c4a230;color:#5a5a5a;border:1px solid #a8c4a2">offer</span></td><td>博士</td><td>2026/6/29</td><td>张倩</td><td>可约试岗，候选人考虑一下</td></tr><tr><td>4</td><td>林雪</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c9b99a30;color:#5a5a5a;border:1px solid #c9b99a">试岗</span></td><td>博士</td><td>2026/6/29</td><td>张倩</td><td>7/1试岗，不适应放弃试岗</td></tr><tr><td>11</td><td>李娅珍</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c9b99a30;color:#5a5a5a;border:1px solid #c9b99a">试岗</span></td><td>博士</td><td>2026/7/2</td><td>张倩</td><td>7.4试岗淘汰</td></tr><tr><td>12</td><td>杨晨</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c5bdb030;color:#5a5a5a;border:1px solid #c5bdb0">淘汰</span></td><td>博士</td><td>2026/7/2</td><td>张倩</td><td>没有医美和电销经验，不合适，淘汰</td></tr><tr><td>16</td><td>李林</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#a3b5a630;color:#5a5a5a;border:1px solid #a3b5a6">复试</span></td><td>博士</td><td>2026/7/1</td><td>郭倩</td><td>7.1线上进行面试，线下复试时间待定</td></tr><tr><td>18</td><td>刘昱琪</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c4b7a630;color:#5a5a5a;border:1px solid #c4b7a6">初试</span></td><td>博士</td><td>2026/7/3</td><td>张倩</td><td>主要以出差为主，没有电销和医美经验，不合适</td></tr><tr><td>19</td><td>张含笑</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c4b7a630;color:#5a5a5a;border:1px solid #c4b7a6">初试</span></td><td>博士</td><td>2026/7/5</td><td>张倩</td><td>沟通表达能力较好，候选人回去考虑一下工作量</td></tr><tr><td>26</td><td>葛圆圆</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c9b99a30;color:#5a5a5a;border:1px solid #c9b99a">试岗</span></td><td>博士</td><td>2026/7/10</td><td>张倩</td><td>7/17试岗</td></tr><tr><td>29</td><td>徐晓萌</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#b5c4b130;color:#5a5a5a;border:1px solid #b5c4b1">筛选/沟通</span></td><td>博士</td><td>2026/7/13</td><td>张倩</td><td>7/20上午10点</td></tr><tr><td>30</td><td>张钰</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#a8c4a230;color:#5a5a5a;border:1px solid #a8c4a2">offer</span></td><td>博士</td><td>2026/7/15</td><td>张倩</td><td>终面通过，可约试岗，目前在职，最快8月底到岗</td></tr><tr><td>33</td><td>杨泓</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c4b7a630;color:#5a5a5a;border:1px solid #c4b7a6">初试</span></td><td>博士</td><td>2026/7/17</td><td>郭倩</td><td>7.17下午2点过来面试</td></tr></tbody></table></div></div><div class="detail-section" id="detail-岗位：大健康护士">
+            <h3>岗位：大健康护士 <span class="count-badge">6条</span></h3>
+            <div class="table-wrapper"><table>
+                <thead><tr><th>序号</th><th>姓名</th><th>阶段</th><th>机构</th><th>更新日期</th><th>跟进人</th><th>当前进展</th></tr></thead>
+                <tbody><tr><td>1</td><td>孙瑜谦</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#a8c4a230;color:#5a5a5a;border:1px solid #a8c4a2">offer</span></td><td>医柏龄</td><td>2026/6/29</td><td>张倩</td><td>因薪资问题，候选人需考虑一下</td></tr><tr><td>20</td><td>朱小洁</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c9b99a30;color:#5a5a5a;border:1px solid #c9b99a">试岗</span></td><td>医柏龄</td><td>2026/7/7</td><td>张倩</td><td>经验丰富，可作为护理组长培养</td></tr><tr><td>21</td><td>陈伊静</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c9b99a30;color:#5a5a5a;border:1px solid #c9b99a">试岗</span></td><td>医柏龄</td><td>2026/7/10</td><td>张倩</td><td>有大健康护士经验，7/18试岗</td></tr><tr><td>23</td><td>张淑宁</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#a8c4a230;color:#5a5a5a;border:1px solid #a8c4a2">offer</span></td><td>医柏龄</td><td>2026/7/9</td><td>郭倩</td><td>护士长复试，可以过来试岗几天看看技术，潘总来定一下</td></tr><tr><td>24</td><td>王柳</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#a8c4a230;color:#5a5a5a;border:1px solid #a8c4a2">offer</span></td><td>医柏龄</td><td>2026/7/10</td><td>郭倩</td><td>护士长复试，可以过来试岗几天看看技术，潘总来定一下</td></tr><tr><td>25</td><td>朱晓琪</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#a8c4a230;color:#5a5a5a;border:1px solid #a8c4a2">offer</span></td><td>医柏龄</td><td>2026/7/13</td><td>郭倩</td><td>护士长及潘总进行了复试，可以过来试岗</td></tr></tbody></table></div></div><div class="detail-section" id="detail-岗位：供应室护士">
+            <h3>岗位：供应室护士 <span class="count-badge">5条</span></h3>
+            <div class="table-wrapper"><table>
+                <thead><tr><th>序号</th><th>姓名</th><th>阶段</th><th>机构</th><th>更新日期</th><th>跟进人</th><th>当前进展</th></tr></thead>
+                <tbody><tr><td>3</td><td>宋佳奕</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#a3b5a630;color:#5a5a5a;border:1px solid #a3b5a6">复试</span></td><td>博士</td><td>2026/6/29</td><td>张倩</td><td>年纪较小，淘汰</td></tr><tr><td>5</td><td>林月蕊</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#b8a9c930;color:#5a5a5a;border:1px solid #b8a9c9">终面</span></td><td>博士</td><td>2026/6/29</td><td>张倩</td><td>7/1 下午3点面试，待定</td></tr><tr><td>9</td><td>刘丽萍</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c5bdb030;color:#5a5a5a;border:1px solid #c5bdb0">淘汰</span></td><td>博士</td><td>2026/6/30</td><td>张倩</td><td>年纪较小，淘汰</td></tr><tr><td>10</td><td>张玉娟</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c5bdb030;color:#5a5a5a;border:1px solid #c5bdb0">淘汰</span></td><td>博士</td><td>2026/7/1</td><td>张倩</td><td>年纪较小，考虑结婚生子问题，不合适，淘汰</td></tr><tr><td>15</td><td>乔亚飞</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c9b99a30;color:#5a5a5a;border:1px solid #c9b99a">试岗</span></td><td>博士</td><td>2026/7/1</td><td>郭倩</td><td>7/6试岗</td></tr></tbody></table></div></div><div class="detail-section" id="detail-岗位：注射医生管家">
+            <h3>岗位：注射医生管家 <span class="count-badge">2条</span></h3>
+            <div class="table-wrapper"><table>
+                <thead><tr><th>序号</th><th>姓名</th><th>阶段</th><th>机构</th><th>更新日期</th><th>跟进人</th><th>当前进展</th></tr></thead>
+                <tbody><tr><td>6</td><td>朱艳霞</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c9b99a30;color:#5a5a5a;border:1px solid #c9b99a">试岗</span></td><td>博士</td><td>2026/6/29</td><td>张倩</td><td>7/12试岗，已办入职</td></tr><tr><td>8</td><td>付晨宇</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#b8a9c930;color:#5a5a5a;border:1px solid #b8a9c9">终面</span></td><td>博士</td><td>2026/6/30</td><td>张倩</td><td>刘静面试通过，待鲁院面试，因薪资与预期不符，候选人放弃</td></tr></tbody></table></div></div><div class="detail-section" id="detail-岗位：药剂师">
+            <h3>岗位：药剂师 <span class="count-badge">2条</span></h3>
+            <div class="table-wrapper"><table>
+                <thead><tr><th>序号</th><th>姓名</th><th>阶段</th><th>机构</th><th>更新日期</th><th>跟进人</th><th>当前进展</th></tr></thead>
+                <tbody><tr><td>13</td><td>于晓芸</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c9b99a30;color:#5a5a5a;border:1px solid #c9b99a">试岗</span></td><td>博士</td><td>2026/6/29</td><td>郭倩</td><td>7.1试岗三天，7.3三天试岗与本人及主管沟通，可以办理入职手续</td></tr><tr><td>14</td><td>张迪</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#b8a9c930;color:#5a5a5a;border:1px solid #b8a9c9">终面</span></td><td>博士</td><td>2026/7/1</td><td>郭倩</td><td>可试岗，看于晓芸试岗情况来定是否试岗</td></tr></tbody></table></div></div><div class="detail-section" id="detail-岗位：大健康咨询">
+            <h3>岗位：大健康咨询 <span class="count-badge">2条</span></h3>
+            <div class="table-wrapper"><table>
+                <thead><tr><th>序号</th><th>姓名</th><th>阶段</th><th>机构</th><th>更新日期</th><th>跟进人</th><th>当前进展</th></tr></thead>
+                <tbody><tr><td>22</td><td>杨琦</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#a3b5a630;color:#5a5a5a;border:1px solid #a3b5a6">复试</span></td><td>医柏龄</td><td>2026/7/8</td><td>张倩</td><td>形象气质一般，复试淘汰</td></tr><tr><td>32</td><td>张新</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c4b7a630;color:#5a5a5a;border:1px solid #c4b7a6">初试</span></td><td>医柏龄</td><td>2026/7/19</td><td>张倩</td><td>7/20下午4点</td></tr></tbody></table></div></div><div class="detail-section" id="detail-岗位：皮肤科医生">
+            <h3>岗位：皮肤科医生 <span class="count-badge">2条</span></h3>
+            <div class="table-wrapper"><table>
+                <thead><tr><th>序号</th><th>姓名</th><th>阶段</th><th>机构</th><th>更新日期</th><th>跟进人</th><th>当前进展</th></tr></thead>
+                <tbody><tr><td>27</td><td>谢龙</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c4b7a630;color:#5a5a5a;border:1px solid #c4b7a6">初试</span></td><td>博士</td><td>2026/7/15</td><td>徐玮</td><td>约初试7.19下午2点</td></tr><tr><td>28</td><td>刘筱</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#b5c4b130;color:#5a5a5a;border:1px solid #b5c4b1">筛选/沟通</span></td><td>博士</td><td>2026/7/15</td><td>徐玮</td><td>约初试</td></tr></tbody></table></div></div><div class="detail-section" id="detail-岗位：信息流运营">
+            <h3>岗位：信息流运营 <span class="count-badge">1条</span></h3>
+            <div class="table-wrapper"><table>
+                <thead><tr><th>序号</th><th>姓名</th><th>阶段</th><th>机构</th><th>更新日期</th><th>跟进人</th><th>当前进展</th></tr></thead>
+                <tbody><tr><td>7</td><td>由娇娇</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#b8a9c930;color:#5a5a5a;border:1px solid #b8a9c9">终面</span></td><td>博士</td><td>2026/6/29</td><td>张倩</td><td>陈玲玲、李贺面试通过，待沟通杨泽文</td></tr></tbody></table></div></div><div class="detail-section" id="detail-岗位：管家">
+            <h3>岗位：管家 <span class="count-badge">1条</span></h3>
+            <div class="table-wrapper"><table>
+                <thead><tr><th>序号</th><th>姓名</th><th>阶段</th><th>机构</th><th>更新日期</th><th>跟进人</th><th>当前进展</th></tr></thead>
+                <tbody><tr><td>17</td><td>伊伊</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c4b7a630;color:#5a5a5a;border:1px solid #c4b7a6">初试</span></td><td>博士</td><td>2026/7/2</td><td>郭倩</td><td>回去考虑下综合距离等因素，待定</td></tr></tbody></table></div></div><div class="detail-section" id="detail-岗位：自媒体专员">
+            <h3>岗位：自媒体专员 <span class="count-badge">1条</span></h3>
+            <div class="table-wrapper"><table>
+                <thead><tr><th>序号</th><th>姓名</th><th>阶段</th><th>机构</th><th>更新日期</th><th>跟进人</th><th>当前进展</th></tr></thead>
+                <tbody><tr><td>31</td><td>张文</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#b5c4b130;color:#5a5a5a;border:1px solid #b5c4b1">筛选/沟通</span></td><td>博士</td><td>2026/7/15</td><td>张倩</td><td>7/20下午3点</td></tr></tbody></table></div></div></div>
+    <div style="margin-top:20px;"><div class="detail-section" id="detail-跟进人：张倩">
+            <h3>跟进人：张倩 <span class="count-badge">22条</span></h3>
+            <div class="table-wrapper"><table>
+                <thead><tr><th>序号</th><th>岗位</th><th>姓名</th><th>阶段</th><th>机构</th><th>更新日期</th><th>当前进展</th></tr></thead>
+                <tbody><tr><td>1</td><td>大健康护士</td><td>孙瑜谦</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#a8c4a230;color:#5a5a5a;border:1px solid #a8c4a2">offer</span></td><td>医柏龄</td><td>2026/6/29</td><td>因薪资问题，候选人需考虑一下</td></tr><tr><td>2</td><td>线上客服</td><td>王泽坤</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#a8c4a230;color:#5a5a5a;border:1px solid #a8c4a2">offer</span></td><td>博士</td><td>2026/6/29</td><td>可约试岗，候选人考虑一下</td></tr><tr><td>3</td><td>供应室护士</td><td>宋佳奕</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#a3b5a630;color:#5a5a5a;border:1px solid #a3b5a6">复试</span></td><td>博士</td><td>2026/6/29</td><td>年纪较小，淘汰</td></tr><tr><td>4</td><td>线上客服</td><td>林雪</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c9b99a30;color:#5a5a5a;border:1px solid #c9b99a">试岗</span></td><td>博士</td><td>2026/6/29</td><td>7/1试岗，不适应放弃试岗</td></tr><tr><td>5</td><td>供应室护士</td><td>林月蕊</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#b8a9c930;color:#5a5a5a;border:1px solid #b8a9c9">终面</span></td><td>博士</td><td>2026/6/29</td><td>7/1 下午3点面试，待定</td></tr><tr><td>6</td><td>注射医生管家</td><td>朱艳霞</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c9b99a30;color:#5a5a5a;border:1px solid #c9b99a">试岗</span></td><td>博士</td><td>2026/6/29</td><td>7/12试岗，已办入职</td></tr><tr><td>7</td><td>信息流运营</td><td>由娇娇</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#b8a9c930;color:#5a5a5a;border:1px solid #b8a9c9">终面</span></td><td>博士</td><td>2026/6/29</td><td>陈玲玲、李贺面试通过，待沟通杨泽文</td></tr><tr><td>8</td><td>注射医生管家</td><td>付晨宇</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#b8a9c930;color:#5a5a5a;border:1px solid #b8a9c9">终面</span></td><td>博士</td><td>2026/6/30</td><td>刘静面试通过，待鲁院面试，因薪资与预期不符，候选人放弃</td></tr><tr><td>9</td><td>供应室护士</td><td>刘丽萍</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c5bdb030;color:#5a5a5a;border:1px solid #c5bdb0">淘汰</span></td><td>博士</td><td>2026/6/30</td><td>年纪较小，淘汰</td></tr><tr><td>10</td><td>供应室护士</td><td>张玉娟</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c5bdb030;color:#5a5a5a;border:1px solid #c5bdb0">淘汰</span></td><td>博士</td><td>2026/7/1</td><td>年纪较小，考虑结婚生子问题，不合适，淘汰</td></tr><tr><td>11</td><td>线上客服</td><td>李娅珍</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c9b99a30;color:#5a5a5a;border:1px solid #c9b99a">试岗</span></td><td>博士</td><td>2026/7/2</td><td>7.4试岗淘汰</td></tr><tr><td>12</td><td>线上客服</td><td>杨晨</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c5bdb030;color:#5a5a5a;border:1px solid #c5bdb0">淘汰</span></td><td>博士</td><td>2026/7/2</td><td>没有医美和电销经验，不合适，淘汰</td></tr><tr><td>18</td><td>线上客服</td><td>刘昱琪</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c4b7a630;color:#5a5a5a;border:1px solid #c4b7a6">初试</span></td><td>博士</td><td>2026/7/3</td><td>主要以出差为主，没有电销和医美经验，不合适</td></tr><tr><td>19</td><td>线上客服</td><td>张含笑</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c4b7a630;color:#5a5a5a;border:1px solid #c4b7a6">初试</span></td><td>博士</td><td>2026/7/5</td><td>沟通表达能力较好，候选人回去考虑一下工作量</td></tr><tr><td>20</td><td>大健康护士</td><td>朱小洁</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c9b99a30;color:#5a5a5a;border:1px solid #c9b99a">试岗</span></td><td>医柏龄</td><td>2026/7/7</td><td>经验丰富，可作为护理组长培养</td></tr><tr><td>21</td><td>大健康护士</td><td>陈伊静</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c9b99a30;color:#5a5a5a;border:1px solid #c9b99a">试岗</span></td><td>医柏龄</td><td>2026/7/10</td><td>有大健康护士经验，7/18试岗</td></tr><tr><td>22</td><td>大健康咨询</td><td>杨琦</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#a3b5a630;color:#5a5a5a;border:1px solid #a3b5a6">复试</span></td><td>医柏龄</td><td>2026/7/8</td><td>形象气质一般，复试淘汰</td></tr><tr><td>26</td><td>线上客服</td><td>葛圆圆</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c9b99a30;color:#5a5a5a;border:1px solid #c9b99a">试岗</span></td><td>博士</td><td>2026/7/10</td><td>7/17试岗</td></tr><tr><td>29</td><td>线上客服</td><td>徐晓萌</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#b5c4b130;color:#5a5a5a;border:1px solid #b5c4b1">筛选/沟通</span></td><td>博士</td><td>2026/7/13</td><td>7/20上午10点</td></tr><tr><td>30</td><td>线上客服</td><td>张钰</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#a8c4a230;color:#5a5a5a;border:1px solid #a8c4a2">offer</span></td><td>博士</td><td>2026/7/15</td><td>终面通过，可约试岗，目前在职，最快8月底到岗</td></tr><tr><td>31</td><td>自媒体专员</td><td>张文</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#b5c4b130;color:#5a5a5a;border:1px solid #b5c4b1">筛选/沟通</span></td><td>博士</td><td>2026/7/15</td><td>7/20下午3点</td></tr><tr><td>32</td><td>大健康咨询</td><td>张新</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c4b7a630;color:#5a5a5a;border:1px solid #c4b7a6">初试</span></td><td>医柏龄</td><td>2026/7/19</td><td>7/20下午4点</td></tr></tbody></table></div></div><div class="detail-section" id="detail-跟进人：郭倩">
+            <h3>跟进人：郭倩 <span class="count-badge">9条</span></h3>
+            <div class="table-wrapper"><table>
+                <thead><tr><th>序号</th><th>岗位</th><th>姓名</th><th>阶段</th><th>机构</th><th>更新日期</th><th>当前进展</th></tr></thead>
+                <tbody><tr><td>13</td><td>药剂师</td><td>于晓芸</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c9b99a30;color:#5a5a5a;border:1px solid #c9b99a">试岗</span></td><td>博士</td><td>2026/6/29</td><td>7.1试岗三天，7.3三天试岗与本人及主管沟通，可以办理入职手续</td></tr><tr><td>14</td><td>药剂师</td><td>张迪</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#b8a9c930;color:#5a5a5a;border:1px solid #b8a9c9">终面</span></td><td>博士</td><td>2026/7/1</td><td>可试岗，看于晓芸试岗情况来定是否试岗</td></tr><tr><td>15</td><td>供应室护士</td><td>乔亚飞</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c9b99a30;color:#5a5a5a;border:1px solid #c9b99a">试岗</span></td><td>博士</td><td>2026/7/1</td><td>7/6试岗</td></tr><tr><td>16</td><td>线上客服</td><td>李林</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#a3b5a630;color:#5a5a5a;border:1px solid #a3b5a6">复试</span></td><td>博士</td><td>2026/7/1</td><td>7.1线上进行面试，线下复试时间待定</td></tr><tr><td>17</td><td>管家</td><td>伊伊</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c4b7a630;color:#5a5a5a;border:1px solid #c4b7a6">初试</span></td><td>博士</td><td>2026/7/2</td><td>回去考虑下综合距离等因素，待定</td></tr><tr><td>23</td><td>大健康护士</td><td>张淑宁</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#a8c4a230;color:#5a5a5a;border:1px solid #a8c4a2">offer</span></td><td>医柏龄</td><td>2026/7/9</td><td>护士长复试，可以过来试岗几天看看技术，潘总来定一下</td></tr><tr><td>24</td><td>大健康护士</td><td>王柳</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#a8c4a230;color:#5a5a5a;border:1px solid #a8c4a2">offer</span></td><td>医柏龄</td><td>2026/7/10</td><td>护士长复试，可以过来试岗几天看看技术，潘总来定一下</td></tr><tr><td>25</td><td>大健康护士</td><td>朱晓琪</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#a8c4a230;color:#5a5a5a;border:1px solid #a8c4a2">offer</span></td><td>医柏龄</td><td>2026/7/13</td><td>护士长及潘总进行了复试，可以过来试岗</td></tr><tr><td>33</td><td>线上客服</td><td>杨泓</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c4b7a630;color:#5a5a5a;border:1px solid #c4b7a6">初试</span></td><td>博士</td><td>2026/7/17</td><td>7.17下午2点过来面试</td></tr></tbody></table></div></div><div class="detail-section" id="detail-跟进人：徐玮">
+            <h3>跟进人：徐玮 <span class="count-badge">2条</span></h3>
+            <div class="table-wrapper"><table>
+                <thead><tr><th>序号</th><th>岗位</th><th>姓名</th><th>阶段</th><th>机构</th><th>更新日期</th><th>当前进展</th></tr></thead>
+                <tbody><tr><td>27</td><td>皮肤科医生</td><td>谢龙</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#c4b7a630;color:#5a5a5a;border:1px solid #c4b7a6">初试</span></td><td>博士</td><td>2026/7/15</td><td>约初试7.19下午2点</td></tr><tr><td>28</td><td>皮肤科医生</td><td>刘筱</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:#b5c4b130;color:#5a5a5a;border:1px solid #b5c4b1">筛选/沟通</span></td><td>博士</td><td>2026/7/15</td><td>约初试</td></tr></tbody></table></div></div></div>
+</div>
+
+</div>
+
+<footer>博士医美招聘数据看板 · 数据来源：腾讯文档 · 莫兰迪色系设计</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const allRecords = [{"序号": 1, "更新日期": "2026/6/29", "岗位": "大健康护士", "机构": "医柏龄", "姓名": "孙瑜谦", "性别": "女", "年龄": 25, "初步评价": "18-19即墨人民医院护士，2022-2023在口腔干过，有护士资格证和执业证，形象气质佳，有服务意识", "阶段": "offer", "当前进展": "因薪资问题，候选人需考虑一下", "跟进人": "张倩"}, {"序号": 2, "更新日期": "2026/6/29", "岗位": "线上客服", "机构": "博士", "姓名": "王泽坤", "性别": "女", "年龄": 21, "初步评价": "形象气质佳，一年保时捷主播，因工作过累考虑离职，家住崂山", "阶段": "offer", "当前进展": "可约试岗，候选人考虑一下", "跟进人": "张倩"}, {"序号": 3, "更新日期": "2026/6/29", "岗位": "供应室护士", "机构": "博士", "姓名": "宋佳奕", "性别": "女", "年龄": 21, "初步评价": "有护士资格证，26应届毕业生，个人有意向往医美行业发展", "阶段": "复试", "当前进展": "年纪较小，淘汰", "跟进人": "张倩"}, {"序号": 4, "更新日期": "2026/6/29", "岗位": "线上客服", "机构": "博士", "姓名": "林雪", "性别": "女", "年龄": 24, "初步评价": "形象气质佳，御嘉妍干过半年前台和助理，对医美项目有一定了解", "阶段": "试岗", "当前进展": "7/1试岗，不适应放弃试岗", "跟进人": "张倩"}, {"序号": 5, "更新日期": "2026/6/29", "岗位": "供应室护士", "机构": "博士", "姓名": "林月蕊", "性别": "女", "年龄": 26, "初步评价": "有护士资格证和执业证", "阶段": "终面", "当前进展": "7/1 下午3点面试，待定", "跟进人": "张倩"}, {"序号": 6, "更新日期": "2026/6/29", "岗位": "注射医生管家", "机构": "博士", "姓名": "朱艳霞", "性别": "女", "年龄": 21, "初步评价": "有生美和轻医美经验", "阶段": "试岗", "当前进展": "7/12试岗，已办入职", "跟进人": "张倩"}, {"序号": 7, "更新日期": "2026/6/29", "岗位": "信息流运营", "机构": "博士", "姓名": "由娇娇", "性别": "女", "年龄": 36, "初步评价": "有医美竞价经验，最近两段为信息流优化师经验", "阶段": "终面", "当前进展": "陈玲玲、李贺面试通过，待沟通杨泽文", "跟进人": "张倩"}, {"序号": 8, "更新日期": "2026/6/30", "岗位": "注射医生管家", "机构": "博士", "姓名": "付晨宇", "性别": "女", "年龄": 24, "初步评价": "两年护士，两年医助及客服经验，医疗背景，沟通表达能力好，形象气质佳", "阶段": "终面", "当前进展": "刘静面试通过，待鲁院面试，因薪资与预期不符，候选人放弃", "跟进人": "张倩"}, {"序号": 9, "更新日期": "2026/6/30", "岗位": "供应室护士", "机构": "博士", "姓名": "刘丽萍", "性别": "女", "年龄": 23, "初步评价": "5年公立医院护士经验", "阶段": "淘汰", "当前进展": "年纪较小，淘汰", "跟进人": "张倩"}, {"序号": 10, "更新日期": "2026/7/1", "岗位": "供应室护士", "机构": "博士", "姓名": "张玉娟", "性别": "女", "年龄": 25, "初步评价": "有护士资格证和执业证", "阶段": "淘汰", "当前进展": "年纪较小，考虑结婚生子问题，不合适，淘汰", "跟进人": "张倩"}, {"序号": 11, "更新日期": "2026/7/2", "岗位": "线上客服", "机构": "博士", "姓名": "李娅珍", "性别": "女", "年龄": 26, "初步评价": "有电销经验", "阶段": "试岗", "当前进展": "7.4试岗淘汰", "跟进人": "张倩"}, {"序号": 12, "更新日期": "2026/7/2", "岗位": "线上客服", "机构": "博士", "姓名": "杨晨", "性别": "男", "年龄": 23, "初步评价": "没有医美和电销经验，不合适", "阶段": "淘汰", "当前进展": "没有医美和电销经验，不合适，淘汰", "跟进人": "张倩"}, {"序号": 13, "更新日期": "2026/6/29", "岗位": "药剂师", "机构": "博士", "姓名": "于晓芸", "性别": "女", "年龄": 26, "初步评价": "有二家医美机构药房工作经验，药剂师证件", "阶段": "试岗", "当前进展": "7.1试岗三天，7.3三天试岗与本人及主管沟通，可以办理入职手续", "跟进人": "郭倩"}, {"序号": 14, "更新日期": "2026/7/1", "岗位": "药剂师", "机构": "博士", "姓名": "张迪", "性别": "女", "年龄": 30, "初步评价": "有药剂师证件，原先在二家综合医院做药剂师工作", "阶段": "终面", "当前进展": "可试岗，看于晓芸试岗情况来定是否试岗", "跟进人": "郭倩"}, {"序号": 15, "更新日期": "2026/7/1", "岗位": "供应室护士", "机构": "博士", "姓名": "乔亚飞", "性别": "女", "年龄": 30, "初步评价": "有护士证，本人陕西西安人，毕业一直在一家二级综合医院做病房护士工作，在当地就业面太窄，来青岛发展", "阶段": "试岗", "当前进展": "7/6试岗", "跟进人": "郭倩"}, {"序号": 16, "更新日期": "2026/7/1", "岗位": "线上客服", "机构": "博士", "姓名": "李林", "性别": "女", "年龄": 24, "初步评价": "本人护理专业，毕业后先后在北京伊美尔做咨询助理1.5年，南京华韩做咨询师1.5年，本人自述感觉个人综合能力目前只能在小机构做咨询，所以选择深耕下再日后往现场发展，张宁复试有一定专业，需几天后回青岛线下复试下", "阶段": "复试", "当前进展": "7.1线上进行面试，线下复试时间待定", "跟进人": "郭倩"}, {"序号": 17, "更新日期": "2026/7/2", "岗位": "管家", "机构": "博士", "姓名": "伊伊", "性别": "女", "年龄": 30, "初步评价": "本人有护士证，在大连董萍医美做过4年咨询，在青岛美莱科技做过皮肤管理及客户管理管家3.5年，刚离职，本人日后想往技术或销售岗发展，对管家偏服务感觉不是很适合，目前在李沧区住，通勤1个多小时，感觉有点远，需考虑", "阶段": "初试", "当前进展": "回去考虑下综合距离等因素，待定", "跟进人": "郭倩"}, {"序号": 18, "更新日期": "2026/7/3", "岗位": "线上客服", "机构": "博士", "姓名": "刘昱琪", "性别": "女", "年龄": 22, "初步评价": "有美容师和中医养生销售经验", "阶段": "初试", "当前进展": "主要以出差为主，没有电销和医美经验，不合适", "跟进人": "张倩"}, {"序号": 19, "更新日期": "2026/7/5", "岗位": "线上客服", "机构": "博士", "姓名": "张含笑", "性别": "女", "年龄": 25, "初步评价": "一年半医院电话销售经验", "阶段": "初试", "当前进展": "沟通表达能力较好，候选人回去考虑一下工作量", "跟进人": "张倩"}, {"序号": 20, "更新日期": "2026/7/7", "岗位": "大健康护士", "机构": "医柏龄", "姓名": "朱小洁", "性别": "女", "年龄": 38, "初步评价": "近20年护士经验", "阶段": "试岗", "当前进展": "经验丰富，可作为护理组长培养", "跟进人": "张倩"}, {"序号": 21, "更新日期": "2026/7/10", "岗位": "大健康护士", "机构": "医柏龄", "姓名": "陈伊静", "性别": "女", "年龄": 28, "初步评价": "9年护理经验，大健康行业3年护士经验", "阶段": "试岗", "当前进展": "有大健康护士经验，7/18试岗", "跟进人": "张倩"}, {"序号": 22, "更新日期": "2026/7/8", "岗位": "大健康咨询", "机构": "医柏龄", "姓名": "杨琦", "性别": "女", "年龄": 40, "初步评价": "40岁，女，已离职，现居市北，生物科学专业，前期做过广告及食品行业销售，今年4月开始接触大健康，任职运营总监，负责院内管理，主要为运营体系搭建、接诊流程、产品体系搭建等，沟通表达能力好，意向度较高，因现在的企业老板负债过多，无法发薪，选择离职。", "阶段": "复试", "当前进展": "形象气质一般，复试淘汰", "跟进人": "张倩"}, {"序号": 23, "更新日期": "2026/7/9", "岗位": "大健康护士", "机构": "医柏龄", "姓名": "张淑宁", "性别": "女", "年龄": 21, "初步评价": "形象气质佳，2026年毕业，有护士证，在即墨一家高端体检中心做护士工作，自述静脉穿刺技术还可以，还未离职，在新单位在试用期，因拖欠工资选择离职", "阶段": "offer", "当前进展": "护士长复试，可以过来试岗几天看看技术，潘总来定一下", "跟进人": "郭倩"}, {"序号": 24, "更新日期": "2026/7/10", "岗位": "大健康护士", "机构": "医柏龄", "姓名": "王柳", "性别": "女", "年龄": 21, "初步评价": "形象气质佳，2027年毕业，有护士证，在即墨一家高端体检中心做护士工作，自述静脉穿刺技术还可以，还未离职，在新单位在试用期，因拖欠工资选择离职", "阶段": "offer", "当前进展": "护士长复试，可以过来试岗几天看看技术，潘总来定一下", "跟进人": "郭倩"}, {"序号": 25, "更新日期": "2026/7/13", "岗位": "大健康护士", "机构": "医柏龄", "姓名": "朱晓琪", "性别": "女", "年龄": 22, "初步评价": "形象气质好，本人原先做影像护士，做血管造影的静脉穿刺，之前做临床老年人居多，穿刺技术没有问题，目前还未离职，可以过来试岗，大约半个月离职", "阶段": "offer", "当前进展": "护士长及潘总进行了复试，可以过来试岗", "跟进人": "郭倩"}, {"序号": 26, "更新日期": "2026/7/10", "岗位": "线上客服", "机构": "博士", "姓名": "葛圆圆", "性别": "女", "年龄": 24, "初步评价": "多年销售经验，短暂接触过医美客服岗位", "阶段": "试岗", "当前进展": "7/17试岗", "跟进人": "张倩"}, {"序号": 27, "更新日期": "2026/7/15", "岗位": "皮肤科医生", "机构": "博士", "姓名": "谢龙", "性别": "男", "年龄": "", "初步评价": "", "阶段": "初试", "当前进展": "约初试7.19下午2点", "跟进人": "徐玮"}, {"序号": 28, "更新日期": "2026/7/15", "岗位": "皮肤科医生", "机构": "博士", "姓名": "刘筱", "性别": "女", "年龄": "", "初步评价": "", "阶段": "筛选/沟通", "当前进展": "约初试", "跟进人": "徐玮"}, {"序号": 29, "更新日期": "2026/7/13", "岗位": "线上客服", "机构": "博士", "姓名": "徐晓萌", "性别": "女", "年龄": 22, "初步评价": "1年伊美尔客服经验", "阶段": "筛选/沟通", "当前进展": "7/20上午10点", "跟进人": "张倩"}, {"序号": 30, "更新日期": "2026/7/15", "岗位": "线上客服", "机构": "博士", "姓名": "张钰", "性别": "女", "年龄": 30, "初步评价": "有眼科咨询及美容导师经验", "阶段": "offer", "当前进展": "终面通过，可约试岗，目前在职，最快8月底到岗", "跟进人": "张倩"}, {"序号": 31, "更新日期": "2026/7/15", "岗位": "自媒体专员", "机构": "博士", "姓名": "张文", "性别": "女", "年龄": 24, "初步评价": "", "阶段": "筛选/沟通", "当前进展": "7/20下午3点", "跟进人": "张倩"}, {"序号": 32, "更新日期": "2026/7/19", "岗位": "大健康咨询", "机构": "医柏龄", "姓名": "张新", "性别": "女", "年龄": 36, "初步评价": "36岁，女，现居黄岛，10余年私募基金销售经验，20年开始接触大健康行业，主要负责市场拓展及客户对接工作，客户以金融、保险行业客户为主，自身有一定资源。25年底开始自己创业，但因资金及市场问题，目前在收尾阶段，想要寻求稳定发展的平台。", "阶段": "初试", "当前进展": "7/20下午4点", "跟进人": "张倩"}, {"序号": 33, "更新日期": "2026/7/17", "岗位": "线上客服", "机构": "博士", "姓名": "杨泓", "性别": "女", "年龄": 33, "初步评价": "", "阶段": "初试", "当前进展": "7.17下午2点过来面试", "跟进人": "郭倩"}];
+
+function scrollToTable(name){
+    const h3s = document.querySelectorAll('#detail-recruitment h3');
+    for(const h of h3s){
+        if(h.textContent.includes(name)){
+            h.scrollIntoView({behavior:'smooth',block:'start'});
+            break;
+        }
+    }
+}
+
+function filterByPos(pos){
+    showAll();
+    scrollToTable('岗位：'+pos);
+}
+
+function filterOrg(org){
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    const filtered = org === 'all' ? allRecords : allRecords.filter(r=>r['机构']===org);
+    updateMainTable(filtered);
+}
+
+function filterOrgBtn(org){
+    const btns = document.querySelectorAll('.filter-btn');
+    btns.forEach(b=>b.classList.remove('active'));
+    if(org === '博士') btns[1].classList.add('active');
+    if(org === '医柏龄') btns[2].classList.add('active');
+    updateMainTable(allRecords.filter(r=>r['机构']===org));
+}
+
+function showAll(){
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.filter-btn')[3].classList.add('active');
+    updateMainTable(allRecords);
+}
+
+function updateMainTable(recs){
+    const tbody = document.querySelector('#detail-全部候选人 tbody');
+    if(!tbody) return;
+    let rows = '';
+    for(const r of recs){
+        const stageColor = {'筛选/沟通':'#b5c4b1','初试':'#c4b7a6','复试':'#a3b5a6','终面':'#b8a9c9','试岗':'#c9b99a','offer':'#a8c4a2','入职':'#b7b7a4','淘汰':'#c5bdb0'}[r['阶段']] || '#d4cfc7';
+        rows += `<tr><td>${r['序号']}</td><td>${r['岗位']}</td><td>${r['姓名']}</td><td><span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:500;background:${stageColor}30;color:#5a5a5a;border:1px solid ${stageColor}">${r['阶段']}</span></td><td>${r['机构']}</td><td>${r['更新日期']}</td><td>${r['跟进人']}</td><td>${r['初步评价']}</td><td>${r['当前进展']}</td></tr>`;
+    }
+    tbody.innerHTML = rows;
+    document.querySelector('#detail-全部候选人 .count-badge').textContent = recs.length + '条';
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    const drBtn = document.querySelectorAll('.filter-btn')[1];
+    if(drBtn) {
+        document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+        drBtn.classList.add('active');
+        updateMainTable(allRecords.filter(r=>r['机构']==='博士'));
+    }
+});
+</script>
+</body>
+</html>
